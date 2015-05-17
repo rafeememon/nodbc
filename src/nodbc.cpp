@@ -110,19 +110,7 @@ public:
     void Execute() {
         try {
             nanodbc::result result = nanodbc::execute(*connection, query);
-
-            picojson::array rows;
-            const short columns = result.columns();
-
-            while (result.next()) {
-                picojson::object row;
-                for (short col = 0; col < columns; col++) {
-                    row[result.column_name(col)] = GetJsonValue(&result, col);
-                }
-                rows.push_back(picojson::value(row));
-            }
-
-            json = picojson::value(rows).serialize();
+            json = GetJsonObject(&result).serialize();
         }
         catch (const nanodbc::database_error &err) {
             SetErrorMessage(err.what());
@@ -141,6 +129,21 @@ public:
     };
 
 private:
+    picojson::value GetJsonObject(nanodbc::result *result) {
+        picojson::array rows;
+        const short columns = result->columns();
+
+        while (result->next()) {
+            picojson::object row;
+            for (short col = 0; col < columns; col++) {
+                row[result->column_name(col)] = GetJsonValue(result, col);
+            }
+            rows.push_back(picojson::value(row));
+        }
+
+        return picojson::value(rows);
+    }
+
     picojson::value GetJsonValue(nanodbc::result *result, short col) {
         if (result->is_null(col)) {
             return picojson::value();
