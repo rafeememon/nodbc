@@ -1,3 +1,11 @@
+#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+#endif
+
+#include <sql.h>
+#include <sqlext.h>
+
 #include "nan.h"
 #include "nanodbc.h"
 #include "picojson.h"
@@ -109,7 +117,7 @@ public:
             while (result.next()) {
                 picojson::object row;
                 for (short col = 0; col < columns; col++) {
-                    row[result.column_name(col)] = picojson::value(result.get<string>(col));
+                    row[result.column_name(col)] = GetJsonValue(&result, col);
                 }
                 rows.push_back(picojson::value(row));
             }
@@ -133,6 +141,27 @@ public:
     };
 
 private:
+    picojson::value GetJsonValue(nanodbc::result *result, short col) {
+        if (result->is_null(col)) {
+            return picojson::value();
+        }
+
+        switch (result->column_datatype(col)) {
+        case SQL_NUMERIC:
+        case SQL_DECIMAL:
+        case SQL_INTEGER:
+        case SQL_SMALLINT:
+        case SQL_TINYINT:
+        case SQL_BIGINT:
+        case SQL_FLOAT:
+        case SQL_REAL:
+        case SQL_DOUBLE:
+            return picojson::value(result->get<double>(col));
+        default:
+            return picojson::value(result->get<string>(col));
+        }
+    }
+
     nanodbc::connection *connection;
     string query;
     string json;
