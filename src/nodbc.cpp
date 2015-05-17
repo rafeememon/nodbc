@@ -13,6 +13,7 @@ public:
     static NAN_METHOD(IsConnected);
     static NAN_METHOD(Open);
     static NAN_METHOD(Close);
+    static NAN_METHOD(Execute);
 private:
     nanodbc::connection connection;
 };
@@ -93,6 +94,64 @@ NAN_METHOD(NodbcConnection::Close) {
     NanReturnUndefined();
 }
 
+class ExecuteWorker : public NanAsyncWorker {
+public:
+    ExecuteWorker(NanCallback *callback, nanodbc::connection *connection, string query)
+        : NanAsyncWorker(callback), connection(connection), query(query) {}
+
+    void Execute() {
+        try {
+            nanodbc::result result = nanodbc::execute(*connection, query);
+
+            picojson::array rows;
+            const short columns = result.columns();
+
+            while (result.next()) {
+                picojson::object row;
+                for (short col = 0; col < columns; col++) {
+                    row[result.column_name(col)] = picojson::value(result.get<string>(col));
+                }
+                rows.push_back(picojson::value(row));
+            }
+
+            json = picojson::value(rows).serialize();
+        }
+        catch (const nanodbc::database_error &err) {
+            SetErrorMessage(err.what());
+        }
+    }
+
+    void HandleOKCallback() {
+        NanScope();
+
+        v8::Local<v8::Value> argv[] = {
+            NanNull(),
+            NanNew(json.c_str())
+        };
+
+        callback->Call(2, argv);
+    };
+
+private:
+    nanodbc::connection *connection;
+    string query;
+    string json;
+};
+
+NAN_METHOD(NodbcConnection::Execute) {
+    NanScope();
+
+    NodbcConnection *self = ObjectWrap::Unwrap<NodbcConnection>(args.Holder());
+    string query(*NanAsciiString(args[0].As<v8::String>()));
+    NanCallback *callback = new NanCallback(args[1].As<v8::Function>());
+
+    ExecuteWorker *worker = new ExecuteWorker(callback, &self->connection, query);
+    worker->SaveToPersistent("database", args.Holder());
+    NanAsyncQueueWorker(worker);
+
+    NanReturnUndefined();
+}
+
 void NodbcConnection::Init() {
     v8::Local<v8::FunctionTemplate> tpl = NanNew<v8::FunctionTemplate>(NodbcConnection::New);
     NanAssignPersistent(nodbc_constructor, tpl);
@@ -101,6 +160,7 @@ void NodbcConnection::Init() {
     NODE_SET_PROTOTYPE_METHOD(tpl, "isConnected", NodbcConnection::IsConnected);
     NODE_SET_PROTOTYPE_METHOD(tpl, "open", NodbcConnection::Open);
     NODE_SET_PROTOTYPE_METHOD(tpl, "close", NodbcConnection::Close);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "execute", NodbcConnection::Execute);
 }
 
 void Init(v8::Handle<v8::Object> target) {
