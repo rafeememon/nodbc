@@ -1,6 +1,7 @@
 #ifndef CONNECTION_ASYNC_H
 #define CONNECTION_ASYNC_H
 
+#include "connection_params.h"
 #include "nan.h"
 #include "nanodbc.h"
 
@@ -37,7 +38,8 @@ namespace nodbc {
     ExecuteWorker(
       NanCallback *callback,
       nanodbc::connection *connection,
-      std::string query);
+      std::string query,
+      Parameters parameters);
 
     virtual void Execute();
 
@@ -46,6 +48,7 @@ namespace nodbc {
   private:
     nanodbc::connection *connection;
     std::string query;
+    Parameters parameters;
     std::string json;
   };
 

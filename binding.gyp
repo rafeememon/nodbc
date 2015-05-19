@@ -5,6 +5,7 @@
       'sources': [
         'src/connection.cpp',
         'src/connection_async.cpp',
+        'src/connection_params.cpp',
         'src/connection_util.cpp',
         'src/nodbc.cpp'
       ],

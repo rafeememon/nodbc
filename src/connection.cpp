@@ -54,9 +54,11 @@ namespace nodbc {
 
     Connection *self = ObjectWrap::Unwrap<Connection>(args.Holder());
     std::string query(*NanAsciiString(args[0].As<v8::String>()));
-    NanCallback *callback = new NanCallback(args[1].As<v8::Function>());
+    v8::Local<v8::Array> values = args[1].As<v8::Array>();
+    Parameters parameters = GetParametersFromArray(values);
+    NanCallback *callback = new NanCallback(args[2].As<v8::Function>());
 
-    ExecuteWorker *worker = new ExecuteWorker(callback, &self->connection, query);
+    ExecuteWorker *worker = new ExecuteWorker(callback, &self->connection, query, parameters);
     worker->SaveToPersistent("database", args.Holder());
     NanAsyncQueueWorker(worker);
 

@@ -33,14 +33,26 @@ namespace nodbc {
   ExecuteWorker::ExecuteWorker(
     NanCallback *callback,
     nanodbc::connection *connection,
-    std::string query)
+    std::string query,
+    Parameters parameters)
     : NanAsyncWorker(callback),
     connection(connection),
-    query(query) {};
+    query(query),
+    parameters(parameters) {};
 
   void ExecuteWorker::Execute() {
     try {
-      nanodbc::result result = nanodbc::execute(*connection, query);
+      nanodbc::result result;
+      
+      if (!parameters.empty()) {
+        nanodbc::statement statement(*connection, query);
+        BindParametersToStatement(statement, parameters);
+        result = nanodbc::execute(statement);
+      }
+      else {
+        result = nanodbc::execute(*connection, query);
+      }
+
       json = GetResultAsJson(&result);
     }
     catch (const std::runtime_error &err) {
