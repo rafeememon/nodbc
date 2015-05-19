@@ -50,6 +50,9 @@ namespace nodbc {
   }
 
   std::string GetResultAsJson(nanodbc::result *result) {
+    if (result->columns() == 0) {
+      return picojson::value().serialize();
+    }
     return GetJsonObjects(result).serialize();
   }
 
