@@ -11,13 +11,13 @@ namespace nodbc {
   public:
     OpenWorker(
       NanCallback *callback,
-      nanodbc::connection *connection,
+      nanodbc::connection &connection,
       std::string connectionString);
 
     virtual void Execute();
 
   private:
-    nanodbc::connection *connection;
+    nanodbc::connection connection;
     std::string connectionString;
   };
 
@@ -25,19 +25,19 @@ namespace nodbc {
   public:
     CloseWorker(
       NanCallback *callback,
-      nanodbc::connection *connection);
+      nanodbc::connection &connection);
 
     virtual void Execute();
 
   private:
-    nanodbc::connection *connection;
+    nanodbc::connection connection;
   };
 
   class ExecuteWorker : public NanAsyncWorker {
   public:
     ExecuteWorker(
       NanCallback *callback,
-      nanodbc::connection *connection,
+      nanodbc::connection &connection,
       std::string query,
       Parameters parameters);
 
@@ -46,7 +46,7 @@ namespace nodbc {
     virtual void HandleOKCallback();
 
   private:
-    nanodbc::connection *connection;
+    nanodbc::connection connection;
     std::string query;
     Parameters parameters;
     std::string json;

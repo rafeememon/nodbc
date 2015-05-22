@@ -11,12 +11,12 @@
 
 namespace nodbc {
 
-  picojson::value GetJsonValue(nanodbc::result *result, short col) {
-    if (result->is_null(col)) {
+  picojson::value GetJsonValue(nanodbc::result &result, short col) {
+    if (result.is_null(col)) {
       return picojson::value();
     }
 
-    switch (result->column_datatype(col)) {
+    switch (result.column_datatype(col)) {
     case SQL_NUMERIC:
     case SQL_DECIMAL:
     case SQL_INTEGER:
@@ -26,31 +26,31 @@ namespace nodbc {
     case SQL_FLOAT:
     case SQL_REAL:
     case SQL_DOUBLE:
-      return picojson::value(result->get<double>(col));
+      return picojson::value(result.get<double>(col));
     default:
-      return picojson::value(result->get<std::string>(col));
+      return picojson::value(result.get<std::string>(col));
     }
   }
 
-  picojson::value GetJsonObject(nanodbc::result *result) {
+  picojson::value GetJsonObject(nanodbc::result &result) {
     picojson::object object;
-    const short columns = result->columns();
+    const short columns = result.columns();
     for (short col = 0; col < columns; col++) {
-      object[result->column_name(col)] = GetJsonValue(result, col);
+      object[result.column_name(col)] = GetJsonValue(result, col);
     }
     return picojson::value(object);
   }
 
-  picojson::value GetJsonObjects(nanodbc::result *result) {
+  picojson::value GetJsonObjects(nanodbc::result &result) {
     picojson::array rows;
-    while (result->next()) {
+    while (result.next()) {
       rows.push_back(GetJsonObject(result));
     }
     return picojson::value(rows);
   }
 
-  std::string GetResultAsJson(nanodbc::result *result) {
-    if (result->columns() == 0) {
+  std::string GetResultAsJson(nanodbc::result &result) {
+    if (result.columns() == 0) {
       return picojson::value().serialize();
     }
     return GetJsonObjects(result).serialize();

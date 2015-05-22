@@ -5,7 +5,7 @@
 
 namespace nodbc {
 
-  std::string GetResultAsJson(nanodbc::result *result);
+  std::string GetResultAsJson(nanodbc::result &result);
 
 }
 

@@ -5,7 +5,7 @@ namespace nodbc {
 
   OpenWorker::OpenWorker(
     NanCallback *callback,
-    nanodbc::connection *connection,
+    nanodbc::connection &connection,
     std::string connectionString)
     : NanAsyncWorker(callback),
     connection(connection),
@@ -13,7 +13,7 @@ namespace nodbc {
 
   void OpenWorker::Execute() {
     try {
-      connection->connect(connectionString);
+      connection.connect(connectionString);
     }
     catch (const nanodbc::database_error &err) {
       SetErrorMessage(err.what());
@@ -22,17 +22,17 @@ namespace nodbc {
 
   CloseWorker::CloseWorker(
     NanCallback *callback,
-    nanodbc::connection *connection)
+    nanodbc::connection &connection)
     : NanAsyncWorker(callback),
     connection(connection) {};
 
   void CloseWorker::Execute() {
-    connection->disconnect();
+    connection.disconnect();
   }
 
   ExecuteWorker::ExecuteWorker(
     NanCallback *callback,
-    nanodbc::connection *connection,
+    nanodbc::connection &connection,
     std::string query,
     Parameters parameters)
     : NanAsyncWorker(callback),
@@ -45,15 +45,15 @@ namespace nodbc {
       nanodbc::result result;
       
       if (!parameters.empty()) {
-        nanodbc::statement statement(*connection, query);
+        nanodbc::statement statement(connection, query);
         BindParametersToStatement(statement, parameters);
         result = nanodbc::execute(statement);
       }
       else {
-        result = nanodbc::execute(*connection, query);
+        result = nanodbc::execute(connection, query);
       }
 
-      json = GetResultAsJson(&result);
+      json = GetResultAsJson(result);
     }
     catch (const std::runtime_error &err) {
       SetErrorMessage(err.what());
