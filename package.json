@@ -17,8 +17,19 @@
     "odbc"
   ],
   "main": "./lib/nodbc.js",
+  "scripts": {
+    "install": "node-pre-gyp install --fallback-to-build"
+  },
   "dependencies": {
     "bindings": "~1.2.1",
-    "nan": "~1.8.4"
+    "nan": "~1.8.4",
+    "node-pre-gyp": "~0.6.7"
+  },
+  "binary": {
+    "module_name": "nodbc",
+    "module_path": "./build/Release/nodbc.node",
+    "host": "https://github.com",
+    "remote_path": "./rafeememon/nodbc/releases/download/v{version}",
+    "package_name": "{module_name}-{node_abi}-{platform}-{arch}.tar.gz"
   }
 }

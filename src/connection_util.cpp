@@ -1,3 +1,10 @@
+#include <string.h>
+#include <v8.h>
+#include <node.h>
+#include <node_version.h>
+#include <time.h>
+#include <uv.h>
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

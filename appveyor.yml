@@ -1,0 +1,34 @@
+environment:
+  matrix:
+    - nodejs_version: 0.10
+    - nodejs_version: 0.12
+
+platform:
+  - x86
+
+install:
+  # Install and build module
+  - ps: Install-Product node $env:nodejs_version $env:Platform
+  - node --version
+  - npm --version
+  - npm install --build-from-source --msvs_version=2013
+  # Push an artifact named with ABI/platform/architecture
+  - node -e "console.log('node-v'+process.versions.modules+'-'+process.platform+'-'+process.arch)" > tmp.txt
+  - set /p VERSION_STRING=<tmp.txt
+  - set ARTIFACT_NAME=nodbc-%VERSION_STRING%
+  - 7z a -ttar %ARTIFACT_NAME%.tar .\build\Release\nodbc.node
+  - 7z a -tgzip %ARTIFACT_NAME%.tar.gz %ARTIFACT_NAME%.tar
+  - appveyor PushArtifact %ARTIFACT_NAME%.tar.gz -DeploymentName nodbc
+
+build: off
+
+test: off
+
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: zOICB/sfpSMk59c6sVEIhrrvwtwtwK/+dicPLcnKM5Ksihv0pNvfU5SB1sdOJ0lI
+  artifact: nodbc
+  on:
+    branch: master
+    appveyor_repo_tag: true

@@ -1,3 +1,10 @@
+#include <string.h>
+#include <v8.h>
+#include <node.h>
+#include <node_version.h>
+#include <time.h>
+#include <uv.h>
+
 #include "connection_async.h"
 #include "connection_util.h"
 
@@ -43,7 +50,7 @@ namespace nodbc {
   void ExecuteWorker::Execute() {
     try {
       nanodbc::result result;
-      
+
       if (!parameters.empty()) {
         nanodbc::statement statement(connection, query);
         BindParametersToStatement(statement, parameters);
