@@ -1,10 +1,10 @@
 environment:
   matrix:
-    - nodejs_version: 0.10
     - nodejs_version: 0.12
 
 platform:
   - x86
+  - x64
 
 install:
   # Install and build module
